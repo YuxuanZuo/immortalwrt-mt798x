@@ -61,6 +61,13 @@
 		#size-cells = <0>;
 	};
 
+	gsw_an8855: gsw@1 {
+		compatible = "airoha,an8855";
+		#mediatek,ethsys = <&ethsys>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
 	nmbm_spim_nand: nmbm_spim_nand {
 		compatible = "generic,nmbm";
 

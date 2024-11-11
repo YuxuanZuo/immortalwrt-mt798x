@@ -433,6 +433,35 @@ define Device/xiaomi_mi-router-ax3000t
 endef
 TARGET_DEVICES += xiaomi_mi-router-ax3000t
 
+define Device/xiaomi_mi-router-ax3000t-an8855-stock
+  DEVICE_VENDOR := Xiaomi
+  DEVICE_MODEL := Mi Router AX3000T with AN8855 (stock layout)
+  DEVICE_DTS := mt7981-xiaomi-mi-router-ax3000t-an8855-stock
+  DEVICE_DTS_DIR := $(DTS_DIR)/mediatek
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  IMAGE_SIZE := 34816k
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+endef
+TARGET_DEVICES += xiaomi_mi-router-ax3000t-an8855-stock
+
+define Device/xiaomi_mi-router-ax3000t-an8855
+  DEVICE_VENDOR := Xiaomi
+  DEVICE_MODEL := Mi Router AX3000T with AN8855
+  DEVICE_DTS := mt7981-xiaomi-mi-router-ax3000t-an8855
+  DEVICE_DTS_DIR := $(DTS_DIR)/mediatek
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  IMAGE_SIZE := 114688k
+  KERNEL_IN_UBI := 1
+  IMAGES += factory.bin
+  IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+endef
+TARGET_DEVICES += xiaomi_mi-router-ax3000t-an8855
+
 define Device/glinet_gl-mt3000
   DEVICE_VENDOR := GL.iNet
   DEVICE_MODEL := GL-MT3000

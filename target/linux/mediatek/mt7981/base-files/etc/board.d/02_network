@@ -23,11 +23,18 @@ mediatek_setup_interfaces()
 	*2500wan-p5*)
 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" wan
 		;;
-	xiaomi,mi-router-ax3000t* |\
+	xiaomi,mi-router-ax3000t|\
+	xiaomi,mi-router-ax3000t-stock|\
 	xiaomi,mi-router-wr30u*)
 		ucidef_set_interfaces_lan_wan "eth0" "eth1"
 		ucidef_add_switch "switch0" \
 			"1:lan" "2:lan" "3:lan" "0:wan" "6u@eth0" "5u@eth1"
+		;;
+	xiaomi,mi-router-ax3000t-an8855|\
+	xiaomi,mi-router-ax3000t-an8855-stock)
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		ucidef_add_switch "switch0" \
+			"1:lan" "2:lan" "3:lan" "0:wan" "5t@eth0"
 		;;
 	*360,t7*)
 		ucidef_set_interfaces_lan_wan "eth0" "eth1"

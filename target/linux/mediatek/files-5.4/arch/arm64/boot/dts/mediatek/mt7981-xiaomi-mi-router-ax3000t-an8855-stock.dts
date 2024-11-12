@@ -13,20 +13,5 @@
 };
 
 &gsw_an8855 {
-	airoha,mdio = <&mdio>;
-	reset-gpios = <&pio 39 0>;
-	interrupt-parent = <&pio>;
-	interrupts = <38 IRQ_TYPE_LEVEL_HIGH>;
 	status = "okay";
-
-	port@5 {
-		compatible = "airoha,an8855-port";
-		reg = <5>;
-		phy-mode = "2500base-x";
-
-		fixed-link {
-			speed = <2500>;
-			full-duplex;
-		};
-	};
 };

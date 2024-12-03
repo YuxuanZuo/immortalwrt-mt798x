@@ -67,6 +67,24 @@ function getPortIcon(carrier) {
   return L.resource(`icons/port_${carrier ? 'up' : 'down'}.png`);
 }
 
+function portDom(link, duplex, label, speed, tx_bytes, rx_bytes) {
+  const portIcon = getPortIcon(link);
+  const portColor = getPortColor(link, duplex);
+
+  return E('div', { style: ethStyle.box }, [
+    E('div', { style: ethStyle.head + portColor }, label),
+    E('div', { style: ethStyle.body }, [
+      E('img', { style: ethStyle.icon, src: portIcon }),
+      E('div', { style: ethStyle.speed }, formatSpeed(speed)),
+      E('div', { style: ethStyle.traffic }, [
+        '\u25b2\u202f%1024.1mB'.format(tx_bytes),
+        E('br'),
+        '\u25bc\u202f%1024.1mB'.format(rx_bytes)
+      ])
+    ])
+  ]);
+}
+
 return baseclass.extend({
   title: _('Ethernet Information'),
 
@@ -96,53 +114,37 @@ return baseclass.extend({
     const board = data[1];
     const netdevs = data[2];
 
+    let stats;
+    let foundWAN = false;
     const ethPorts = [];
-    const wan = netdevs[board.network.wan.device];
-    const { speed, duplex, carrier } = wan.link;
-    let portIcon = getPortIcon(carrier);
-    let portColor = getPortColor(carrier, duplex);
-    ethPorts.push(
-      E('div', { style: ethStyle.box }, [
-        E('div', { style: ethStyle.head + portColor }, 'WAN'),
-        E('div', { style: ethStyle.body }, [
-          E('img', { style: ethStyle.icon, src: portIcon }),
-          E('div', { style: ethStyle.speed }, formatSpeed(speed)),
-          E('div', { style: ethStyle.traffic }, [
-            '\u25b2\u202f%1024.1mB'.format(wan.stats.tx_bytes),
-            E('br'),
-            '\u25bc\u202f%1024.1mB'.format(wan.stats.rx_bytes)
-          ])
-        ])
-      ])
-    );
-
     const switch0 = topologies.switch0;
     for (const port of switch0.ports) {
       const label = port.label.toUpperCase();
-      if (!label.startsWith('LAN')) continue;
       const { link, duplex, speed } = switch0.portstate[port.num];
-
-      portIcon = getPortIcon(link);
-      portColor = getPortColor(link, duplex);
       const txrx = { tx_bytes: 0, rx_bytes: 0 };
-      const stats = netdevs['br-lan'].stats;
-      const { tx_bytes, rx_bytes } = link ? stats : txrx;
-      ethPorts.push(
-        E('div', { style: ethStyle.box }, [
-          E('div', { style: ethStyle.head + portColor }, port.label),
-          E('div', { style: ethStyle.body }, [
-            E('img', { style: ethStyle.icon, src: portIcon }),
-            E('div', { style: ethStyle.speed }, formatSpeed(speed)),
-            E('div', { style: ethStyle.traffic }, [
-              '\u25b2\u202f%1024.1mB'.format(tx_bytes),
-              E('br'),
-              '\u25bc\u202f%1024.1mB'.format(rx_bytes)
-            ])
-          ])
-        ])
-      );
+
+      if (label.startsWith('WAN')) {
+        foundWAN = true;
+        stats = netdevs[board.network.wan.device].stats;
+        const { tx_bytes, rx_bytes } = stats;
+        ethPorts.unshift(
+          portDom(link, duplex, 'WAN', speed, tx_bytes, rx_bytes)
+        );
+      } else if (label.startsWith('LAN')) {
+        stats = netdevs['br-lan'].stats;
+        const { tx_bytes, rx_bytes } = link ? stats : txrx;
+        ethPorts.push(portDom(link, duplex, label, speed, tx_bytes, rx_bytes));
+      }
     }
 
+    if (foundWAN) return ethPorts;
+
+    const wan = netdevs[board.network.wan.device];
+    const { speed, duplex, carrier } = wan.link;
+    const { tx_bytes, rx_bytes } = wan.stats;
+    ethPorts.unshift(
+      portDom(carrier, duplex, 'WAN', speed, tx_bytes, rx_bytes)
+    );
     return ethPorts;
   },
 
@@ -157,23 +159,10 @@ return baseclass.extend({
     for (const device of devices) {
       if (device in netdevs === false) continue;
       const dev = netdevs[device];
+      const label = dev.name;
       const { speed, duplex, carrier } = dev.link;
-      let portIcon = getPortIcon(carrier);
-      let portColor = getPortColor(carrier, duplex);
-      ethPorts.push(
-        E('div', { style: ethStyle.box }, [
-          E('div', { style: ethStyle.head + portColor }, dev.name),
-          E('div', { style: ethStyle.body }, [
-            E('img', { style: ethStyle.icon, src: portIcon }),
-            E('div', { style: ethStyle.speed }, formatSpeed(speed)),
-            E('div', { style: ethStyle.traffic }, [
-              '\u25b2\u202f%1024.1mB'.format(dev.stats.tx_bytes),
-              E('br'),
-              '\u25bc\u202f%1024.1mB'.format(dev.stats.rx_bytes)
-            ])
-          ])
-        ])
-      );
+      const { tx_bytes, rx_bytes } = dev.stats;
+      ethPorts.push(portDom(carrier, duplex, label, speed, tx_bytes, rx_bytes));
     }
 
     return ethPorts;
